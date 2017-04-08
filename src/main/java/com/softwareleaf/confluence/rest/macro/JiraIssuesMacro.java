@@ -187,18 +187,19 @@ public class JiraIssuesMacro {
         return sb.toString();
     }
 
-    /**
-     * Convert wiki markup produced by this macro to storage representation.
-     *
-     * @param client the {@code ConfluenceClient} to use to convert to storage form.
-     * @return a String containing the wiki markup of this macro, to storage representation.
-     * @throws NullPointerException if {@code client} is null.
-     */
-    public String toStorageRepresentation(final ConfluenceClient client) {
-        Objects.requireNonNull(client);
-        Storage wikiStorage = new Storage(toWikiMarkup(), Storage.Representation.WIKI.toString());
-        return client.convertContent(wikiStorage, Storage.Representation.STORAGE).getValue();
-    }
+    // TODO why is 'API call' inside of 'Macro building' logic ??
+//    /**
+//     * Convert wiki markup produced by this macro to storage representation.
+//     *
+//     * @param client the {@code ConfluenceClient} to use to convert to storage form.
+//     * @return a String containing the wiki markup of this macro, to storage representation.
+//     * @throws NullPointerException if {@code client} is null.
+//     */
+//    public String toStorageRepresentation(final ConfluenceClient client) {
+//        Objects.requireNonNull(client);
+//        Storage wikiStorage = new Storage(toWikiMarkup(), Storage.Representation.WIKI.toString());
+//        return client.convertContent(wikiStorage, Storage.Representation.STORAGE).getValue();
+//    }
 
     /**
      * Builder factory method.

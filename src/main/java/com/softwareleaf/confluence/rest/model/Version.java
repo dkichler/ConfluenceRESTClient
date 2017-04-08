@@ -26,6 +26,11 @@ public class Version {
      */
     private String message;
 
+    /**
+     * Content version number
+     */
+    private Integer number;
+
     public Version() {
     }
 
@@ -51,6 +56,14 @@ public class Version {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public Integer getNumber() {
+        return number;
+    }
+
+    public void setNumber(Integer number) {
+        this.number = number;
     }
 
     // equals and hashcode

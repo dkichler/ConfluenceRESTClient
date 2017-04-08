@@ -3,16 +3,16 @@ package com.softwareleaf.confluence.rest;
 import com.google.common.collect.ImmutableMap;
 import com.google.gson.GsonBuilder;
 import com.softwareleaf.confluence.rest.model.*;
-import retrofit.Callback;
-import retrofit.RestAdapter;
-import retrofit.client.Client;
-import retrofit.converter.GsonConverter;
+import com.softwareleaf.confluence.rest.util.Expand;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import retrofit2.Call;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
-import java.util.Arrays;
+import java.io.IOException;
 import java.util.Base64;
-import java.util.List;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /**
  * A class that is capable of making requests to the confluence API.
@@ -65,8 +65,8 @@ public class ConfluenceClient {
      * @param id the id of the page or blog post to fetch.
      * @return the Content instance.
      */
-    public Content getContentById(String id) {
-        return confluenceAPI.getContentById(id);
+    public Call<Content> getContentById(String id, Expand expand) {
+        return confluenceAPI.getContentById(id, ImmutableMap.of("expand", expand.toQueryParams()));
     }
 
     /**
@@ -75,7 +75,7 @@ public class ConfluenceClient {
      * @return an instance of {@code getContentResults} wrapping the list
      * of {@code Content} instances obtained from the API call.
      */
-    public ContentResultList getContentResults() {
+    public Call<ContentResultList> getContentResults() {
         return confluenceAPI.getContentResults();
     }
 
@@ -87,8 +87,7 @@ public class ConfluenceClient {
      * @return an instance of {@code getContentResults} wrapping the list
      * of {@code Content} instances obtained from the API call.
      */
-    public ContentResultList getContentBySpaceKeyAndTitle(final String key,
-                                                          final String title) {
+    public Call<ContentResultList> getContentBySpaceKeyAndTitle(final String key, final String title) {
         return confluenceAPI.getContentBySpaceKeyAndTitle(key, title);
     }
 
@@ -102,21 +101,8 @@ public class ConfluenceClient {
      * @see <a href="https://confluence.atlassian.com/display/DOC/Confluence+Storage+Format">
      * Confluence Storage Format</a>
      */
-    public Storage convertContent(final Storage storage,
-                                  final Storage.Representation convertTo) {
+    public Call<Storage> convertContent(final Storage storage, final Storage.Representation convertTo) {
         return confluenceAPI.postContentConversion(storage, convertTo.toString());
-    }
-
-    /**
-     * Performs a POST request with the body of the request containing the
-     * {@code content}, thus creating a new page or blog post on confluence.
-     *
-     * @param content  the content to post to confluence.
-     * @param callback this handle provides a means of inquiring about
-     *                 the success or failure of the invocation.
-     */
-    public void postContentWithCallback(final Content content, final Callback<Content> callback) {
-        confluenceAPI.postContentWithCallback(content, callback);
     }
 
     /**
@@ -126,9 +112,19 @@ public class ConfluenceClient {
      * @param content the content to post to confluence.
      * @return the result {@code Content} instance with the {@code id} field updated.
      */
-    public Content postContent(final Content content) {
-        System.out.println(content.toString());
+    public Call<Content> createContent(final Content content) {
         return confluenceAPI.postContent(content);
+    }
+
+    /**
+     * Performs a PUT request with the body of the request containing the
+     * {@code content}, thus updating page or blog post on confluence.
+     *
+     * @param content the content to put to confluence
+     * @return //TODO
+     */
+    public Call<Content> udpateContent(final Content content) {
+        return confluenceAPI.updateContent(content, content.getId());
     }
 
     /**
@@ -138,9 +134,8 @@ public class ConfluenceClient {
      *
      * @param id the id of the page of blog post to be deleted.
      */
-    public void deleteContentById(final String id) {
-        NoContent noContent = confluenceAPI.deleteContentById(id);
-        logger.fine("Response: " + noContent);
+    public Call<NoContent> deleteContentById(final String id) {
+        return confluenceAPI.deleteContentById(id);
     }
 
     /**
@@ -148,24 +143,8 @@ public class ConfluenceClient {
      *
      * @return a list of spaces available on confluence.
      */
-    public List<Space> getSpaces() {
-        Space[] results = confluenceAPI.getSpaces().getSpaces();
-        return Arrays.stream(results).collect(Collectors.toList());
-    }
-
-    /**
-     * Fetch all content from a confluence space.
-     *
-     * @param spaceKey the key that identifies the target Space.
-     * @return a list of all content in the given Space identified by {@code spaceKey}.
-     */
-    public List<Content> getAllSpaceContent(final String spaceKey) {
-        Content[] results = confluenceAPI.getAllSpaceContent(spaceKey,
-                ImmutableMap.of(
-                        "expand", "ancestors,body.storage",
-                        "limit", "1000"))
-                .getContents();
-        return Arrays.stream(results).collect(Collectors.toList());
+    public Call<SpaceResultList> getSpaces() {
+        return confluenceAPI.getSpaces();
     }
 
     /**
@@ -176,7 +155,7 @@ public class ConfluenceClient {
      * @return the {@code Space} as a confirmation returned by Confluence
      * REST API.
      */
-    public Space createSpace(final Space space) {
+    public Call<Space> createSpace(final Space space) {
         return confluenceAPI.createSpace(space);
     }
 
@@ -188,8 +167,21 @@ public class ConfluenceClient {
      * @return the {@code Space} as a confirmation returned by Confluence
      * REST API.
      */
-    public Space createPrivateSpace(final Space space) {
+    public Call<Space> createPrivateSpace(final Space space) {
         return confluenceAPI.createPrivateSpace(space);
+    }
+
+    public Call<ContentResultList> getRootContent(final String spaceKey) {
+        return confluenceAPI.getSpaceContent(spaceKey, ImmutableMap.of(
+                "depth", Depth.ROOT.toString()
+        ));
+    }
+
+    public Call<ContentResultList> getRootContent(final String spaceKey, Expand expand) {
+        return confluenceAPI.getSpaceContent(spaceKey, ImmutableMap.of(
+                "depth", Depth.ROOT.toString(),
+                "expand", expand.toQueryParams()
+        ));
     }
 
     /**
@@ -199,12 +191,53 @@ public class ConfluenceClient {
      * @param contentType the type of content to return.
      * @return a list of Content instances obtained from the root.
      */
-    public List<Content> getRootContentBySpaceKey(final String spaceKey,
-                                                  final Type contentType) {
-        Content[] resultList = confluenceAPI
-                .getRootContentBySpaceKey(spaceKey, contentType.toString())
-                .getContents();
-        return Arrays.stream(resultList).collect(Collectors.toList());
+    public Call<ContentResultList> getSpaceRootContent(final String spaceKey, final Type contentType) {
+        return confluenceAPI.getSpaceContent(spaceKey, contentType.toString(), ImmutableMap.of(
+                "depth", Depth.ROOT.toString()
+        ));
+    }
+
+    public Call<ContentResultList> getSpaceRootContent(final String spaceKey, final Type contentType, Expand expand) {
+        return confluenceAPI.getSpaceContent(spaceKey, contentType.toString(), ImmutableMap.of(
+                "depth", Depth.ROOT.toString(),
+                "expand", expand.toQueryParams()
+        ));
+    }
+
+    /**
+     * Fetch all content from a confluence space.
+     *
+     * @param spaceKey the key that identifies the target Space.
+     * @return a list of all content in the given Space identified by {@code spaceKey}.
+     */
+    public Call<ContentResultList> getSpaceContent(final String spaceKey) {
+        return confluenceAPI.getSpaceContent(spaceKey, ImmutableMap.of(
+                "expand", new Expand()
+                        .expand(Expandable.ANCESTORS)
+                        .nestedExpand(Expandable.BODY, Expandable.STORAGE)
+                        .toQueryParams(),
+                "limit", "1000"));
+    }
+
+    public Call<ContentResultList> getSpaceContent(final String spaceKey, Expand expand) {
+        return confluenceAPI.getSpaceContent(spaceKey, ImmutableMap.of(
+                "expand", expand.toQueryParams(),
+                "limit", "1000"));
+    }
+
+    public Call<ContentResultList> getSpaceContent(final String spaceKey, final Type contentType) {
+        return confluenceAPI.getSpaceContent(spaceKey, contentType.toString(), ImmutableMap.of(
+                "expand", new Expand()
+                        .expand(Expandable.ANCESTORS)
+                        .nestedExpand(Expandable.BODY, Expandable.STORAGE)
+                        .toQueryParams(),
+                "limit", "1000"));
+    }
+
+    public Call<ContentResultList> getSpaceContent(final String spaceKey, final Type contentType, Expand expand) {
+        return confluenceAPI.getSpaceContent(spaceKey, contentType.toString(), ImmutableMap.of(
+                "limit", "1000",
+                "expand", expand.toQueryParams()));
     }
 
     /**
@@ -216,14 +249,28 @@ public class ConfluenceClient {
      * @return a list of all child content, matching the {@code content}
      * with the given {@code parentId}.
      */
-    public List<Content> getChildren(final String parentId, final Type contentType) {
-        Content[] resultList = confluenceAPI
-                .getChildren(parentId, contentType.toString(), ImmutableMap.of(
-                        "expand", "history,body.storage,version",
-                        "limit", "1000"
-                ))
-                .getContents();
-        return Arrays.stream(resultList).collect(Collectors.toList());
+    public Call<ContentResultList> getChildren(final String parentId, final Type contentType) {
+        return confluenceAPI.getChildren(parentId, contentType.toString(), ImmutableMap.of(
+                "limit", "1000"));
+    }
+
+    public Call<ContentResultList> getChildren(final String parentId, final Type contentType, Expand expand) {
+        return confluenceAPI.getChildren(parentId, contentType.toString(), ImmutableMap.of(
+                "limit", "1000",
+                "expand", expand.toQueryParams()
+        ));
+    }
+
+    public Call<ContentResultList> getChildren(final String parentId) {
+        return confluenceAPI.getChildren(parentId, ImmutableMap.of(
+                "limit", "1000"));
+    }
+
+    public Call<ContentResultList> getChildren(final String parentId, Expand expand) {
+        return confluenceAPI.getChildren(parentId, ImmutableMap.of(
+                "limit", "1000",
+                "expand", expand.toQueryParams()
+        ));
     }
 
     /**
@@ -259,9 +306,9 @@ public class ConfluenceClient {
 
         /**
          * By default the standard Retrofit {@code Client} will be used. However, if this is
-         * {@link #supplyClient(Client) set} then the provided {@code Client} will be used.
+         * {@link #supplyClient(OkHttpClient) set} then the provided {@code Client} will be used.
          */
-        private Client client;
+        private OkHttpClient client;
 
         // prevent direct instantiation by external classes.
         private Builder() {
@@ -303,7 +350,7 @@ public class ConfluenceClient {
 
         /**
          * This provides a way for users to supply their own implementation of the underlying
-         * {@link Client}. For example, to use {@link com.squareup.okhttp.OkHttpClient OkHttpClient}
+         * {@link OkHttpClient}. For example, to use {@link OkHttpClient}
          * within a proxy environment:
          * <pre>{@code
          *  // example proxy setup
@@ -314,14 +361,14 @@ public class ConfluenceClient {
          *  // finally build the ConfluenceClient
          *  ConfluenceClient.builder()
          *      // other methods omitted for brevity...
-         *      .supplyClient(new OkClient(httpClient))
+         *      .supplyClient(httpClient)
          *      .build();
          * }</pre>
          *
-         * @param client the {@code retrofit.client.Client} to use.
+         * @param client the {@link OkHttpClient} to use.
          * @return {@code this}.
          */
-        public Builder supplyClient(final Client client) {
+        public Builder supplyClient(final OkHttpClient client) {
             this.client = client;
             return this;
         }
@@ -333,9 +380,9 @@ public class ConfluenceClient {
          */
         public ConfluenceClient build() {
             // configure the underlying rest adapter used to create our Confluence API service.
-            final RestAdapter restAdapter = configureRestAdapter();
+            final Retrofit retrofit = configureRetrofit();
             // Create an implementation of the API defined by the specified ConfluenceAPI interface
-            this.confluenceAPI = restAdapter.create(ConfluenceAPI.class);
+            this.confluenceAPI = retrofit.create(ConfluenceAPI.class);
             return new ConfluenceClient(this);
         }
 
@@ -343,7 +390,7 @@ public class ConfluenceClient {
          * Configures and builds the {@code RestAdapter} used to create the
          * {@code ConfluenceClient}.
          */
-        private RestAdapter configureRestAdapter() {
+        private Retrofit configureRetrofit() {
             // determine if we are using the production confluence or not.
             final String URL = alternativeBaseURL == null ? BASE_URL : alternativeBaseURL;
             // determine the user credentials to use.
@@ -360,31 +407,41 @@ public class ConfluenceClient {
             final String encodedCredentials = "Basic " + Base64.getEncoder().encodeToString(credentials.getBytes());
 
             // build the default RestAdapter
-            final RestAdapter.Builder restAdapterBuilder = new RestAdapter.Builder()
-                    .setEndpoint(URL)
-                    .setConverter(
-                            new GsonConverter(
-                                    new GsonBuilder()
+            final Retrofit.Builder retrofit = new Retrofit.Builder()
+                    .baseUrl(URL)
+                    .addConverterFactory(
+                            GsonConverterFactory
+                                    .create(new GsonBuilder()
                                             // handles confluence Date format
                                             .setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-                                                    // ensures body.storage HTML is not escaped
+                                            // ensures body.storage HTML is not escaped
                                             .disableHtmlEscaping()
-                                            .create()))
-                    .setRequestInterceptor(
-                            request -> {
-                                request.addHeader("Accept", "application/json");
-                                request.addHeader("Authorization", encodedCredentials);
-                            }
-                    );
-
-            // handle choice of client
-            if (client != null) {
-                restAdapterBuilder.setClient(client);
+                                            .create()));
+            if (client == null) {
+                client = new OkHttpClient();
             }
-
-            return restAdapterBuilder.build();
+            client = client.newBuilder().addInterceptor(new BasicAuthenticationInterceptor(encodedCredentials)).build();
+            retrofit.client(client);
+            return retrofit.build();
         }
 
+    }
+
+    private static class BasicAuthenticationInterceptor implements Interceptor {
+
+        private final String encodedCredentials;
+
+        private BasicAuthenticationInterceptor(String encodedCredentials) {
+            this.encodedCredentials = encodedCredentials;
+        }
+
+        @Override
+        public okhttp3.Response intercept(Chain chain) throws IOException {
+            return chain.proceed(chain.request().newBuilder()
+                    .addHeader("Accept", "application/json")
+                    .addHeader("Authorization", encodedCredentials)
+                    .build());
+        }
     }
 
 }
