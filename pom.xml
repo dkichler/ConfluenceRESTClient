@@ -19,30 +19,30 @@
     </developers>
 
     <!-- Issue management details -->
-    <issueManagement>
-        <system>GitHub</system>
-        <url>https://github.com/entropy64/ConfluenceRESTClient/issues</url>
-    </issueManagement>
+    <!--<issueManagement>-->
+        <!--<system>GitHub</system>-->
+        <!--<url>https://github.com/entropy64/ConfluenceRESTClient/issues</url>-->
+    <!--</issueManagement>-->
 
-    <scm>
-        <url>https://github.com/entropy64/ConfluenceRESTClient</url>
-        <connection>scm:git:git://github.com/entropy64/ConfluenceRESTClient.git</connection>
-        <developerConnection>scm:git:git@github.com:entropy64/ConfluenceRESTClient.git</developerConnection>
-      <tag>HEAD</tag>
-  </scm>
+    <!--<scm>-->
+        <!--<url>https://github.com/entropy64/ConfluenceRESTClient</url>-->
+        <!--<connection>scm:git:git://github.com/entropy64/ConfluenceRESTClient.git</connection>-->
+        <!--<developerConnection>scm:git:git@github.com:entropy64/ConfluenceRESTClient.git</developerConnection>-->
+      <!--<tag>HEAD</tag>-->
+  <!--</scm>-->
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <name>Sonatype OSS Snapshots</name>
-            <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <name>Sonatype OSS Staging</name>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
+    <!--<distributionManagement>-->
+        <!--<snapshotRepository>-->
+            <!--<id>ossrh</id>-->
+            <!--<name>Sonatype OSS Snapshots</name>-->
+            <!--<url>https://oss.sonatype.org/content/repositories/snapshots/</url>-->
+        <!--</snapshotRepository>-->
+        <!--<repository>-->
+            <!--<id>ossrh</id>-->
+            <!--<name>Sonatype OSS Staging</name>-->
+            <!--<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>-->
+        <!--</repository>-->
+    <!--</distributionManagement>-->
 
     <dependencies>
 
@@ -85,20 +85,20 @@
 
     </dependencies>
 
-    <pluginRepositories>
-        <pluginRepository>
-            <id>central</id>
-            <name>Maven Plugin Repository</name>
-            <url>http://repo1.maven.org/maven2</url>
-            <layout>default</layout>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <releases>
-                <updatePolicy>never</updatePolicy>
-            </releases>
-        </pluginRepository>
-    </pluginRepositories>
+    <!--<pluginRepositories>-->
+        <!--<pluginRepository>-->
+            <!--<id>central</id>-->
+            <!--<name>Maven Plugin Repository</name>-->
+            <!--<url>http://repo1.maven.org/maven2</url>-->
+            <!--<layout>default</layout>-->
+            <!--<snapshots>-->
+                <!--<enabled>false</enabled>-->
+            <!--</snapshots>-->
+            <!--<releases>-->
+                <!--<updatePolicy>never</updatePolicy>-->
+            <!--</releases>-->
+        <!--</pluginRepository>-->
+    <!--</pluginRepositories>-->
 
     <profiles>
         <profile>
@@ -208,5 +208,12 @@
             </plugins>
         </pluginManagement>
     </build>
+
+    <distributionManagement>
+        <repository>
+            <id>nexus.unimus.local</id>
+            <url>http://nexus.unimus.local/repository/our-modules</url>
+        </repository>
+    </distributionManagement>
 
 </project>
