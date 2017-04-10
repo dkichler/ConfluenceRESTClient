@@ -69,6 +69,11 @@ public class ConfluenceClient {
         return confluenceAPI.getContentById(id, ImmutableMap.of("expand", expand.toQueryParams()));
     }
 
+    public Call<Content> getContentById(String id) {
+        return confluenceAPI.getContentById(id,
+                ImmutableMap.of("expand", new Expand().nestedExpand(Expandable.BODY, Expandable.STORAGE).toQueryParams()));
+    }
+
     /**
      * Fetch a results object containing a paginated list of content.
      *
@@ -88,7 +93,12 @@ public class ConfluenceClient {
      * of {@code Content} instances obtained from the API call.
      */
     public Call<ContentResultList> getContentBySpaceKeyAndTitle(final String key, final String title) {
-        return confluenceAPI.getContentBySpaceKeyAndTitle(key, title);
+        return confluenceAPI.getContent(ImmutableMap.of("key", key, "title", title));
+    }
+
+    public Call<ContentResultList> getContentBySpaceKeyAndTitle(final String key, final String title, final Expand expand) {
+        return confluenceAPI.getContent(ImmutableMap.of("key", key, "title", title,
+                "expand", expand.toQueryParams()));
     }
 
     /**

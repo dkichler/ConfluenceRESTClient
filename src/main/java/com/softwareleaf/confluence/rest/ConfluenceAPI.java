@@ -35,6 +35,9 @@ public interface ConfluenceAPI {
     Call<ContentResultList> getContentBySpaceKeyAndTitle(final @Query("key") String key,
                                                          final @Query("title") String title);
 
+    @GET("/rest/api/content")
+    Call<ContentResultList> getContent(final @QueryMap Map<String, String> params);
+
     /**
      * Fetch the children for a given {@code Content} identified by the {@code parentId}.
      *
@@ -58,7 +61,7 @@ public interface ConfluenceAPI {
      * @param id the id of the page or blog post to fetch.
      * @return the Content instance representing the JSON response.
      */
-    @GET("/rest/api/content/{id}" + QueryParams.EXPAND_BODY_STORAGE)
+    @GET("/rest/api/content/{id}")
     Call<Content> getContentById(final @Path("id") String id, final @QueryMap Map<String, String> params);
 
     /**
