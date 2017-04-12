@@ -229,10 +229,26 @@ public class ConfluenceClient {
                 "limit", "1000"));
     }
 
+    public Call<ContentResultList> getSpaceContent(final String spaceKey, int start, int limit) {
+        return confluenceAPI.getSpaceContent(spaceKey, ImmutableMap.of(
+                "expand", new Expand().expand(Expandable.ANCESTORS).nestedExpand(Expandable.BODY, Expandable.STORAGE).toQueryParams(),
+                "start", String.valueOf(start),
+                "limit", String.valueOf(limit)
+        ));
+    }
+
     public Call<ContentResultList> getSpaceContent(final String spaceKey, Expand expand) {
         return confluenceAPI.getSpaceContent(spaceKey, ImmutableMap.of(
                 "expand", expand.toQueryParams(),
                 "limit", "1000"));
+    }
+
+    public Call<ContentResultList> getSpaceContent(final String spaceKey, Expand expand, int start, int limit) {
+        return confluenceAPI.getSpaceContent(spaceKey, ImmutableMap.of(
+                "expand", expand.toQueryParams(),
+                "start", String.valueOf(start),
+                "limit", String.valueOf(limit)
+        ));
     }
 
     public Call<ContentResultList> getSpaceContent(final String spaceKey, final Type contentType) {
@@ -244,10 +260,29 @@ public class ConfluenceClient {
                 "limit", "1000"));
     }
 
+    public Call<ContentResultList> getSpaceContent(final String spaceKey, final Type contentType, int start, int limit) {
+        return confluenceAPI.getSpaceContent(spaceKey, contentType.toString(), ImmutableMap.of(
+                "expand", new Expand()
+                        .expand(Expandable.ANCESTORS)
+                        .nestedExpand(Expandable.BODY, Expandable.STORAGE)
+                        .toQueryParams(),
+                "start", String.valueOf(start),
+                "limit", String.valueOf(limit)
+        ));
+    }
+
     public Call<ContentResultList> getSpaceContent(final String spaceKey, final Type contentType, Expand expand) {
         return confluenceAPI.getSpaceContent(spaceKey, contentType.toString(), ImmutableMap.of(
                 "limit", "1000",
                 "expand", expand.toQueryParams()));
+    }
+
+    public Call<ContentResultList> getSpaceContent(final String spaceKey, final Type contentType, Expand expand, int start, int limit) {
+        return confluenceAPI.getSpaceContent(spaceKey, contentType.toString(), ImmutableMap.of(
+                "expand", expand.toQueryParams(),
+                "start", String.valueOf(start),
+                "limit", String.valueOf(limit)
+        ));
     }
 
     /**
