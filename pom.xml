@@ -18,19 +18,6 @@
         </developer>
     </developers>
 
-    <!-- Issue management details -->
-    <!--<issueManagement>-->
-        <!--<system>GitHub</system>-->
-        <!--<url>https://github.com/entropy64/ConfluenceRESTClient/issues</url>-->
-    <!--</issueManagement>-->
-
-    <!--<scm>-->
-        <!--<url>https://github.com/entropy64/ConfluenceRESTClient</url>-->
-        <!--<connection>scm:git:git://github.com/entropy64/ConfluenceRESTClient.git</connection>-->
-        <!--<developerConnection>scm:git:git@github.com:entropy64/ConfluenceRESTClient.git</developerConnection>-->
-      <!--<tag>HEAD</tag>-->
-  <!--</scm>-->
-
     <!--<distributionManagement>-->
         <!--<snapshotRepository>-->
             <!--<id>ossrh</id>-->
